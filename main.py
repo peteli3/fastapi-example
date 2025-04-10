@@ -44,6 +44,58 @@ def increment_counter():
     counter += 1
     return counter
 
+class LoginRequest(BaseModel):
+    username: str
+    password: bytes
+
+@app.post("/login", response_class=HTMLResponse)
+def login(request: Request, login_request: LoginRequest, response: Response):
+    try:
+        if len(login_request.username) == 0:
+            raise HTTPException(status_code=400, detail="Enter an email address")
+        if len(login_request.password) == 0:
+            raise HTTPException(status_code=400, detail="Enter a password")
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_pattern, login_request.username):
+            raise HTTPException(status_code=400, detail="Invalid email address format")
+        if login_request.username not in users:
+            raise HTTPException(status_code=404, detail="User not found")
+        if not checkpw(login_request.password, users[login_request.username]):
+            raise HTTPException(status_code=401, detail="Incorrect password")
+
+        # Generate a session token
+        session_token = str(uuid.uuid4())
+        sessions[session_token] = login_request.username
+
+        # Set the session token in a secure cookie
+        response.set_cookie(key="session_token",
+                            value=session_token,
+                            httponly=True,
+                            secure=True,
+                            samesite="lax",
+                            max_age=3600)  # 1 hour expiration
+
+        return f"Logged in as: {login_request.username}"
+    except HTTPException as e:
+        return f"Error {e.status_code}: {e.detail}"
+
+@app.post("/logout", response_class=HTMLResponse)
+def logout(request: Request, response: Response):
+    # Return a message only if a user was actually logged out
+    session_token = request.cookies.get("session_token")
+    if session_token and session_token in sessions:
+        username = sessions.pop(session_token, None)
+        response.delete_cookie(key="session_token")
+        return "Logged out"
+
+    # Return empty string if no valid session was found
+    return ""
+
+@app.post("/signup", response_class=HTMLResponse)
+def signup(request: Request):
+    # TODO: Implement signup
+    return None
+
 class AddItemRequest(BaseModel):
     name: str
     category: str
@@ -118,55 +170,3 @@ def delete_item(request: Request, delete_request: DeleteItemRequest):
             "categories": categories,
         }
     )
-
-class LoginRequest(BaseModel):
-    username: str
-    password: bytes
-
-@app.post("/login", response_class=HTMLResponse)
-def login(request: Request, login_request: LoginRequest, response: Response):
-    try:
-        if len(login_request.username) == 0:
-            raise HTTPException(status_code=400, detail="Enter an email address")
-        if len(login_request.password) == 0:
-            raise HTTPException(status_code=400, detail="Enter a password")
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        if not re.match(email_pattern, login_request.username):
-            raise HTTPException(status_code=400, detail="Invalid email address format")
-        if login_request.username not in users:
-            raise HTTPException(status_code=404, detail="User not found")
-        if not checkpw(login_request.password, users[login_request.username]):
-            raise HTTPException(status_code=401, detail="Incorrect password")
-
-        # Generate a session token
-        session_token = str(uuid.uuid4())
-        sessions[session_token] = login_request.username
-
-        # Set the session token in a secure cookie
-        response.set_cookie(key="session_token",
-                            value=session_token,
-                            httponly=True,
-                            secure=True,
-                            samesite="lax",
-                            max_age=3600)  # 1 hour expiration
-
-        return f"Logged in as: {login_request.username}"
-    except HTTPException as e:
-        return f"Error {e.status_code}: {e.detail}"
-
-@app.post("/logout", response_class=HTMLResponse)
-def logout(request: Request, response: Response):    
-    # Return a message only if a user was actually logged out
-    session_token = request.cookies.get("session_token")
-    if session_token and session_token in sessions:
-        username = sessions.pop(session_token, None)
-        response.delete_cookie(key="session_token")
-        return "Logged out"
-    
-    # Return empty string if no valid session was found
-    return ""
-
-@app.post("/signup", response_class=HTMLResponse)
-def signup(request: Request):
-    # TODO: Implement signup
-    return None
