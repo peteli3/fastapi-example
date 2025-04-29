@@ -13,3 +13,24 @@ services:
     image: fastapi-example:latest
     platform: linux/amd64
     restart: unless-stopped
+
+  postgres:
+    build:
+      context: .
+      dockerfile: postgres.Dockerfile
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: dbadmin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
