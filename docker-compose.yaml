@@ -20,13 +20,13 @@ services:
       dockerfile: postgres.Dockerfile
     platform: linux/amd64
     environment:
-      POSTGRES_USER: dbadmin
+      POSTGRES_USER: appuser
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: postgres
+      POSTGRES_DB: appdb
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "psql -U appuser -d appdb -c 'SELECT 1'"]
       interval: 10s
       timeout: 5s
       retries: 5
