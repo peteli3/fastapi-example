@@ -8,12 +8,14 @@ import uuid
 
 from pydantic import BaseModel
 
+from .db import get_data
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
 counter = 0
-data_source = []
+data_source = get_data()
 categories = [ "A", "B", "C", "D", "X" ]
 users = { "myuser@gmail.com": hashpw(b"mypassword", gensalt()) }
 
