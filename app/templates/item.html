@@ -2,8 +2,8 @@
 <head>
     <title>Item {{ id }}</title>
     <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
-    <script src="https://unpkg.com/htmx.org@1.9.3"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/json-enc.js"></script>
+    <script src="{{ url_for('static', path='/htmx.org@2.0.4/dist/htmx.min.js') }}"></script>
+    <script src="{{ url_for('static', path='/htmx-ext-json-enc@2.0.1/json-enc.js') }}"></script>
 </head>
 <body>
     <h1 style="margin-left: 10px; margin-top: 20px;">
