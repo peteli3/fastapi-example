@@ -4,12 +4,18 @@ WORKDIR /home
 COPY ./app /home/app
 COPY ./tailwind.config.js /home
 
-# Install and build tailwindcss
+# Install tailwindcss
 ARG TAILWIND_VERSION=v4.1.5
 ARG TAILWIND_BUILD=linux-x64
 RUN curl --output tailwindcss -sLO https://github.com/tailwindlabs/tailwindcss/releases/download/${TAILWIND_VERSION}/tailwindcss-${TAILWIND_BUILD}
 RUN chmod +x tailwindcss
-RUN ls -la tailwindcss
+
+# Install daisyUI
+ARG DAISYUI_VERSION=v5.0.35
+RUN curl -sLO https://github.com/saadeghi/daisyui/releases/download/${DAISYUI_VERSION}/daisyui.js
+RUN curl -sLO https://github.com/saadeghi/daisyui/releases/download/${DAISYUI_VERSION}/daisyui-theme.js
+
+# Build css
 RUN ./tailwindcss -i app/static/input.css -o app/static/output.css --minify
 
 FROM python:3.9-alpine3.21 AS runtime
