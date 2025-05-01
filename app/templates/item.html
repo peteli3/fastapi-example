@@ -1,6 +1,7 @@
 <html>
 <head>
     <title>Item {{ id }}</title>
+    <link href="{{ url_for('static', path='/output.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet">
     <script src="{{ url_for('static', path='/htmx.org@2.0.4/dist/htmx.min.js') }}"></script>
     <script src="{{ url_for('static', path='/htmx-ext-json-enc@2.0.1/json-enc.js') }}"></script>
@@ -19,6 +20,10 @@
         >
             Increment
         </button>
+    </div>
+    <hr style="color: #fafafa; margin-left: 10px;">
+    <div class="bg-blue-500 text-white p-4 m-4 rounded">
+        This should be a blue box with white text
     </div>
     <hr style="color: #fafafa; margin-left: 10px;">
     <div style="margin-left: 10px;">
