@@ -83,7 +83,6 @@
                             <input type="text" id="description" name="description" placeholder="Description" required class="input input-bordered">
                         </div>
                         <input type="hidden" name="id" value="{{ id }}">
-                        <input type="hidden" name="counter" value="{{ counter }}">
                     </div>
                     <div class="modal-action">
                         <button type="submit" class="btn btn-primary">Submit</button>
@@ -112,10 +111,10 @@
                             <td>{{ row[3] }}</td>
                             <td>
                                 <div class="flex gap-3">
-                                    <button class="btn btn-primary" onclick="openEditModal({{ loop.index0 }}, '{{ row[0] }}', '{{ row[1] }}', '{{ row[2] }}', '{{ row[3] }}')">
+                                    <button class="btn btn-primary" onclick="openEditModal('{{ row[0] }}', '{{ row[1] }}', '{{ row[2] }}', '{{ row[3] }}')">
                                         Edit
                                     </button>
-                                    <button class="btn btn-error" onclick="openDeleteModal({{ loop.index0 }}, '{{ row[0] }}')">
+                                    <button class="btn btn-error" onclick="openDeleteModal('{{ row[0] }}')">
                                         Delete
                                     </button>
                                 </div>
@@ -138,7 +137,7 @@
                 hx-ext="json-enc"
                 hx-on::after-request="if (event.detail.successful) closeDeleteModal(); else openErrorModal()"
             >
-                <input type="hidden" id="deleteIndex" name="index">
+                <input type="hidden" id="deleteName" name="name">
                 <div class="modal-action">
                     <button type="submit" class="btn btn-error">Yes, Delete</button>
                     <button type="button" onclick="closeDeleteModal()" class="btn">Cancel</button>
@@ -192,9 +191,7 @@
                         <input type="text" id="editDescription" name="description" placeholder="Description" required class="input input-bordered">
                     </div>
                     
-                    <input type="hidden" id="editIndex" name="index">
                     <input type="hidden" name="id" value="{{ id }}">
-                    <input type="hidden" name="counter" value="{{ counter }}">
                 </div>
                 <div class="modal-action">
                     <button type="submit" class="btn btn-primary">Submit</button>
@@ -214,8 +211,8 @@
             closeAddModal();
             form.reset();
         }
-        function openDeleteModal(index, name) {
-            document.getElementById('deleteIndex').value = index;
+        function openDeleteModal(name) {
+            document.getElementById('deleteName').value = name;
             document.getElementById('deleteItemName').textContent = name;
             document.getElementById('deleteModal').showModal();
         }
@@ -228,8 +225,7 @@
         function closeErrorModal() {
             document.getElementById('errorModal').close();
         }
-        function openEditModal(index, name, category, value, description) {
-            document.getElementById('editIndex').value = index;
+        function openEditModal(name, category, value, description) {
             document.getElementById('editName').value = name;
             document.getElementById('editCategory').value = category;
             document.getElementById('editValue').value = value;

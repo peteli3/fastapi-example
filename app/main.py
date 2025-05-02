@@ -8,23 +8,28 @@ import uuid
 
 from pydantic import BaseModel
 
-from .db import get_data
+from .db import DB
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
-counter = 0
-data_source = get_data()
-categories = [ "A", "B", "C", "D", "X" ]
-users = { "myuser@gmail.com": hashpw(b"mypassword", gensalt()) }
+db = DB()
 
-# In-memory session storage (replace with a database in production)
+counter = 0
+users = { "myuser@gmail.com": hashpw(b"mypassword", gensalt()) }
 sessions = {}
+
+def get_counter():
+    return counter
+
+def set_counter(newval):
+    global counter
+    counter = newval
+    return counter
 
 @app.get("/items/{id}", response_class=HTMLResponse)
 def read_item(request: Request, id: int):
-    global counter, data_source, categories
     session_token = request.cookies.get("session_token")
     username = sessions.get(session_token, None)
     logged_in_as = f"Logged in as: {username}" if username else ""
@@ -33,18 +38,16 @@ def read_item(request: Request, id: int):
         name="item.html",
         context={
             "id": id,
-            "counter": counter,
-            "data_source": data_source,
-            "categories": categories,
+            "counter": get_counter(),
+            "data_source": db.list_items(),
+            "categories": db.list_categories(),
             "logged_in_as": logged_in_as,
         },
     )
 
 @app.post("/increment")
 def increment_counter():
-    global counter
-    counter += 1
-    return counter
+    return set_counter(get_counter() + 1)
 
 class LoginRequest(BaseModel):
     username: str
@@ -65,17 +68,14 @@ def login(request: Request, login_request: LoginRequest, response: Response):
         if not checkpw(login_request.password, users[login_request.username]):
             raise HTTPException(status_code=401, detail="Incorrect password")
 
-        # Generate a session token
         session_token = str(uuid.uuid4())
         sessions[session_token] = login_request.username
-
-        # Set the session token in a secure cookie
         response.set_cookie(key="session_token",
                             value=session_token,
                             httponly=True,
                             secure=True,
                             samesite="lax",
-                            max_age=3600)  # 1 hour expiration
+                            max_age=3600)
 
         return f"Logged in as: {login_request.username}"
     except HTTPException as e:
@@ -83,20 +83,9 @@ def login(request: Request, login_request: LoginRequest, response: Response):
 
 @app.post("/logout", response_class=HTMLResponse)
 def logout(request: Request, response: Response):
-    # Return a message only if a user was actually logged out
     session_token = request.cookies.get("session_token")
     if session_token and session_token in sessions:
-        username = sessions.pop(session_token, None)
         response.delete_cookie(key="session_token")
-        return "Logged out"
-
-    # Return empty string if no valid session was found
-    return ""
-
-@app.post("/signup", response_class=HTMLResponse)
-def signup(request: Request):
-    # TODO: Implement signup
-    return None
 
 class AddItemRequest(BaseModel):
     name: str
@@ -104,71 +93,61 @@ class AddItemRequest(BaseModel):
     value: int
     description: str
     id: str
-    counter: int
 
 @app.post("/add_item", response_class=HTMLResponse)
 def add_item(request: Request, item: AddItemRequest):
-    global counter, data_source, categories
-    data_source.append([item.name,
-                        item.category,
-                        item.value,
-                        item.description])
+    db.add_item(item.name,
+                item.category,
+                item.value,
+                item.description)
     return templates.TemplateResponse(
         name="item.html",
         context={
             "request": request,
-            "data_source": data_source,
+            "data_source": db.list_items(),
             "id": int(item.id),
-            "counter": counter,
-            "categories": categories,
+            "counter": get_counter(),
+            "categories": db.list_categories(),
         }
     )
 
 class EditItemRequest(BaseModel):
-    index: int
     name: str
     category: str
     value: int
     description: str
     id: str
-    counter: int
 
 @app.post("/edit_item", response_class=HTMLResponse)
 def edit_item(request: Request, edit_request: EditItemRequest):
-    global data_source
-    index = edit_request.index
-    if 0 <= index < len(data_source):
-        data_source[index] = [edit_request.name,
-                              edit_request.category,
-                              edit_request.value,
-                              edit_request.description]
+    db.edit_item(edit_request.name,
+                 edit_request.category,
+                 edit_request.value,
+                 edit_request.description)
     return templates.TemplateResponse(
         name="item.html",
         context={
             "request": request,
-            "data_source": data_source,
+            "data_source": db.list_items(),
             "id": int(edit_request.id),
-            "counter": counter,
-            "categories": categories,
+            "counter": get_counter(),
+            "categories": db.list_categories(),
         }
     )
 
 class DeleteItemRequest(BaseModel):
-    index: int
+    name: str
 
 @app.post("/delete_item", response_class=HTMLResponse)
 def delete_item(request: Request, delete_request: DeleteItemRequest):
-    global data_source
-    index = delete_request.index
-    if 0 <= index < len(data_source):
-        data_source.pop(index)  # Remove the item at the specified index
+    db.delete_item(delete_request.name)
     return templates.TemplateResponse(
         name="item.html",
         context={
             "request": request,
-            "data_source": data_source,
+            "data_source": db.list_items(),
             "id": int(request.query_params.get("id", "0")),
-            "counter": counter,
-            "categories": categories,
+            "counter": get_counter(),
+            "categories": db.list_categories(),
         }
     )
