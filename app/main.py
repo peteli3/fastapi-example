@@ -28,6 +28,16 @@ def set_counter(newval):
     counter = newval
     return counter
 
+@app.get("/", response_class=HTMLResponse)
+def get_homepage(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={
+            "request": request,
+        },
+    )
+
 @app.get("/items/{id}", response_class=HTMLResponse)
 def read_item(request: Request, id: int):
     session_token = request.cookies.get("session_token")
