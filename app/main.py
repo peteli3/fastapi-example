@@ -1,4 +1,3 @@
-from bcrypt import hashpw, gensalt, checkpw
 from fastapi import FastAPI, Request, HTTPException, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -17,7 +16,6 @@ templates = Jinja2Templates(directory="app/templates")
 db = DB()
 
 counter = 0
-users = { "myuser@gmail.com": hashpw(b"mypassword", gensalt()) }
 sessions = {}
 
 def get_counter():
@@ -73,10 +71,9 @@ def login(request: Request, login_request: LoginRequest, response: Response):
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         if not re.match(email_pattern, login_request.username):
             raise HTTPException(status_code=400, detail="Invalid email address format")
-        if login_request.username not in users:
-            raise HTTPException(status_code=404, detail="User not found")
-        if not checkpw(login_request.password, users[login_request.username]):
-            raise HTTPException(status_code=401, detail="Incorrect password")
+        res = db.authenticate_user(login_request.username, login_request.password)
+        if not res:
+            raise HTTPException(status_code=401, detail="Email and password do not match")
 
         session_token = str(uuid.uuid4())
         sessions[session_token] = login_request.username

@@ -22,28 +22,6 @@
 </div>
 <hr class="border-white mx-2.5">
 <div class="m-4">
-    <p class="mb-2">
-        <span id="logged-in-as" class="text-lg font-semibold">{{ logged_in_as }}</span>
-    </p>
-    <form id="loginForm" class="flex flex-col gap-3">
-        <div class="flex flex-col gap-3 w-72 mb-3">
-            <div class="flex items-center gap-3">
-                <label for="username" class="w-24">Username:</label>
-                <input type="text" id="username" name="username" placeholder="Username" required class="input input-bordered w-full">
-            </div>
-            <div class="flex items-center gap-3">
-                <label for="password" class="w-24">Password:</label>
-                <input type="password" id="password" name="password" placeholder="Password" required class="input input-bordered w-full">
-            </div>
-        </div>
-        <div class="flex gap-3">
-            <button type="submit" hx-post="/login" hx-target="#logged-in-as" hx-ext="json-enc" class="btn btn-primary">Login</button>
-            <button type="button" hx-post="/logout" hx-target="#logged-in-as" hx-ext="json-enc" class="btn btn-error">Logout</button>
-        </div>
-    </form>
-</div>
-<hr class="border-white mx-2.5">
-<div class="m-4">
     <button class="btn btn-primary" onclick="openAddModal()">
         Add Item
     </button>

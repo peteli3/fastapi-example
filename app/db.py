@@ -26,6 +26,16 @@ class DB:
                     self.conn.commit()
                 connection_pool.putconn(self.conn)
 
+    def authenticate_user(self, email, password):
+        with self.Connection() as curs:
+            curs.execute("""SELECT (password_hash = crypt(%(password)s, password_hash)) AS verified
+                            FROM users
+                            WHERE email = %(email)s;""",
+                            { 'email': email,
+                              'password': password.decode() })
+            row = curs.fetchone()
+            return bool(row[0])
+
     def list_categories(self):
         db_data = []
         try:
