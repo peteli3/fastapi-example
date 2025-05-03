@@ -1,266 +1,239 @@
-<html>
-<head>
-    <title>Item {{ id }}</title>
-    <link href="{{ url_for('static', path='/output.css') }}" rel="stylesheet">
-    <script src="{{ url_for('static', path='/htmx.org@2.0.4/dist/htmx.min.js') }}"></script>
-    <script src="{{ url_for('static', path='/htmx-ext-json-enc@2.0.1/json-enc.js') }}"></script>
-</head>
-<body>
-    <div class="flex flex-col h-screen justify-between">
-        <div class="navbar bg-primary text-primary-content">
-            <div class="drawer">
-                <input id="my-drawer" type="checkbox" class="drawer-toggle" />
-                <div class="drawer-content">
-                    <label for="my-drawer" class="btn btn-primary text-xl drawer-button">
-                        FastAPI Example
-                    </label>
-                </div>
-                <div class="drawer-side">
-                    <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-                    <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
-                        <li><a class="text-xl" href="/">Home</a></li>
-                        <li><a class="text-xl" href="/items/0">Items</a></li>
-                    </ul>
-                </div>
+{% extends "base.html" %}
+
+{% block title %}Item {{ id }}{% endblock %}
+
+{% block content %}
+<div class="p-4">
+    <h1 class="mt-5 text-2xl font-bold">
+        Item ID: {{ id }}
+    </h1>
+    <a class="btn btn-link" href="{{ url_for('read_item', id=id+2) }}">Go to item {{ id+2 }}</a>
+    <p class="text-lg mb-2">
+        Counter: <span id="counter" class="font-semibold">{{ counter }}</span>
+    </p>
+    <button
+        hx-post="/increment"
+        hx-target="#counter"
+        hx-swap="innerHTML"
+        class="btn btn-primary"
+    >
+        Increment
+    </button>
+</div>
+<hr class="border-white mx-2.5">
+<div class="m-4">
+    <p class="mb-2">
+        <span id="logged-in-as" class="text-lg font-semibold">{{ logged_in_as }}</span>
+    </p>
+    <form id="loginForm" class="flex flex-col gap-3">
+        <div class="flex flex-col gap-3 w-72 mb-3">
+            <div class="flex items-center gap-3">
+                <label for="username" class="w-24">Username:</label>
+                <input type="text" id="username" name="username" placeholder="Username" required class="input input-bordered w-full">
+            </div>
+            <div class="flex items-center gap-3">
+                <label for="password" class="w-24">Password:</label>
+                <input type="password" id="password" name="password" placeholder="Password" required class="input input-bordered w-full">
             </div>
         </div>
-        <main class="mb-auto">
-            <div class="p-4">
-                <h1 class="mt-5 text-2xl font-bold">
-                    Item ID: {{ id }}
-                </h1>
-                <a class="btn btn-link" href="{{ url_for('read_item', id=id+2) }}">Go to item {{ id+2 }}</a>
-                <p class="text-lg mb-2">
-                    Counter: <span id="counter" class="font-semibold">{{ counter }}</span>
-                </p>
-                <button
-                    hx-post="/increment"
-                    hx-target="#counter"
-                    hx-swap="innerHTML"
-                    class="btn btn-primary"
-                >
-                    Increment
-                </button>
-            </div>
-            <hr class="border-white mx-2.5">
-            <div class="m-4">
-                <p class="mb-2">
-                    <span id="logged-in-as" class="text-lg font-semibold">{{ logged_in_as }}</span>
-                </p>
-                <form id="loginForm" class="flex flex-col gap-3">
-                    <div class="flex flex-col gap-3 w-72 mb-3">
-                        <div class="flex items-center gap-3">
-                            <label for="username" class="w-24">Username:</label>
-                            <input type="text" id="username" name="username" placeholder="Username" required class="input input-bordered w-full">
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <label for="password" class="w-24">Password:</label>
-                            <input type="password" id="password" name="password" placeholder="Password" required class="input input-bordered w-full">
-                        </div>
+        <div class="flex gap-3">
+            <button type="submit" hx-post="/login" hx-target="#logged-in-as" hx-ext="json-enc" class="btn btn-primary">Login</button>
+            <button type="button" hx-post="/logout" hx-target="#logged-in-as" hx-ext="json-enc" class="btn btn-error">Logout</button>
+        </div>
+    </form>
+</div>
+<hr class="border-white mx-2.5">
+<div class="m-4">
+    <button class="btn btn-primary" onclick="openAddModal()">
+        Add Item
+    </button>
+    <dialog id="addModal" class="modal">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold">Add New Item</h2>
+            <form
+                hx-post="/add_item"
+                hx-target="#itemsTable"
+                hx-swap="innerHTML"
+                hx-ext="json-enc"
+                hx-on::after-request="if (event.detail.successful) resetAddForm(this); else openErrorModal()"
+            >
+                <div class="flex flex-col gap-4 mb-4">
+                    <div class="form-control">
+                        <label for="name" class="label">Name:</label>
+                        <input type="text" id="name" name="name" placeholder="Name" required class="input input-bordered">
                     </div>
-                    <div class="flex gap-3">
-                        <button type="submit" hx-post="/login" hx-target="#logged-in-as" hx-ext="json-enc" class="btn btn-primary">Login</button>
-                        <button type="button" hx-post="/logout" hx-target="#logged-in-as" hx-ext="json-enc" class="btn btn-error">Logout</button>
-                    </div>
-                </form>
-            </div>
-            <hr class="border-white mx-2.5">
-            <div class="m-4">
-                <button class="btn btn-primary" onclick="openAddModal()">
-                    Add Item
-                </button>
-                <dialog id="addModal" class="modal">
-                    <div class="modal-box">
-                        <h2 class="text-lg font-bold">Add New Item</h2>
-                        <form
-                            hx-post="/add_item"
-                            hx-target="#itemsTable"
-                            hx-swap="innerHTML"
-                            hx-ext="json-enc"
-                            hx-on::after-request="if (event.detail.successful) resetAddForm(this); else openErrorModal()"
-                        >
-                            <div class="flex flex-col gap-4 mb-4">
-                                <div class="form-control">
-                                    <label for="name" class="label">Name:</label>
-                                    <input type="text" id="name" name="name" placeholder="Name" required class="input input-bordered">
-                                </div>
-                                <div class="form-control">
-                                    <label for="category" class="label">Category:</label>
-                                    <select id="category" name="category" required class="select select-bordered">
-                                        <option value="" disabled selected>Select Category</option>
-                                        {% for category in categories %}
-                                        <option value="{{ category }}">{{ category }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <div class="form-control">
-                                    <label for="value" class="label">Value:</label>
-                                    <input type="number" id="value" name="value" placeholder="Value" required class="input input-bordered">
-                                </div>
-                                <div class="form-control">
-                                    <label for="description" class="label">Description:</label>
-                                    <input type="text" id="description" name="description" placeholder="Description" required class="input input-bordered">
-                                </div>
-                                <input type="hidden" name="id" value="{{ id }}">
-                            </div>
-                            <div class="modal-action">
-                                <button type="submit" class="btn btn-primary">Submit</button>
-                                <button type="button" onclick="closeAddModal()" class="btn">Close</button>
-                            </div>
-                        </form>
-                    </div>
-                </dialog>
-                <div id="itemsTable" class="overflow-x-auto mt-4" hx-swap-oob="true">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Category</th>
-                                <th>Value</th>
-                                <th>Description</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in data_source %}
-                                <tr>
-                                    <td>{{ row[0] }}</td>
-                                    <td>{{ row[1] }}</td>
-                                    <td>{{ row[2] }}</td>
-                                    <td>{{ row[3] }}</td>
-                                    <td>
-                                        <div class="flex gap-3">
-                                            <button class="btn btn-primary" onclick="openEditModal('{{ row[0] }}', '{{ row[1] }}', '{{ row[2] }}', '{{ row[3] }}')">
-                                                Edit
-                                            </button>
-                                            <button class="btn btn-error" onclick="openDeleteModal('{{ row[0] }}')">
-                                                Delete
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
+                    <div class="form-control">
+                        <label for="category" class="label">Category:</label>
+                        <select id="category" name="category" required class="select select-bordered">
+                            <option value="" disabled selected>Select Category</option>
+                            {% for category in categories %}
+                            <option value="{{ category }}">{{ category }}</option>
                             {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            <dialog id="deleteModal" class="modal">
-                <div class="modal-box">
-                    <h2 class="text-lg font-bold mb-2">Confirm Deletion</h2>
-                    <p>Are you sure you want to delete item <strong id="deleteItemName"></strong>?</p>
-                    <form
-                        id="deleteForm"
-                        hx-post="/delete_item"
-                        hx-target="#itemsTable"
-                        hx-swap="innerHTML"
-                        hx-ext="json-enc"
-                        hx-on::after-request="if (event.detail.successful) closeDeleteModal(); else openErrorModal()"
-                    >
-                        <input type="hidden" id="deleteName" name="name">
-                        <div class="modal-action">
-                            <button type="submit" class="btn btn-error">Yes, Delete</button>
-                            <button type="button" onclick="closeDeleteModal()" class="btn">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            </dialog>
-            <dialog id="errorModal" class="modal" style="z-index: 1000;">
-                <div class="modal-box">
-                    <h2 class="text-lg font-bold">Error</h2>
-                    <p>An error occurred. Please try again later.</p>
-                    <div class="modal-action">
-                        <button type="button" onclick="closeErrorModal()" class="btn">Close</button>
+                        </select>
                     </div>
+                    <div class="form-control">
+                        <label for="value" class="label">Value:</label>
+                        <input type="number" id="value" name="value" placeholder="Value" required class="input input-bordered">
+                    </div>
+                    <div class="form-control">
+                        <label for="description" class="label">Description:</label>
+                        <input type="text" id="description" name="description" placeholder="Description" required class="input input-bordered">
+                    </div>
+                    <input type="hidden" name="id" value="{{ id }}">
                 </div>
-            </dialog>
-            <dialog id="editModal" class="modal">
-                <div class="modal-box">
-                    <h2 class="text-lg font-bold">Edit Item</h2>
-                    <form
-                        id="editForm"
-                        hx-post="/edit_item"
-                        hx-target="#itemsTable"
-                        hx-swap="innerHTML"
-                        hx-ext="json-enc"
-                        hx-on::after-request="if (event.detail.successful) closeEditModal(); else openErrorModal()"
-                    >
-                        <div class="flex flex-col gap-4 mb-4">
-                            <div class="form-control">
-                                <label for="editName" class="label">Name:</label>
-                                <input type="text" id="editName" name="name" placeholder="Name" class="input input-bordered" readonly="readonly">
-                            </div>
-
-                            <div class="form-control">
-                                <label for="editCategory" class="label">Category:</label>
-                                <select id="editCategory" name="category" required class="select select-bordered">
-                                    <option value="" disabled selected>Select Category</option>
-                                    {% for category in categories %}
-                                    <option value="{{ category }}">{{ category }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-
-                            <div class="form-control">
-                                <label for="editValue" class="label">Value:</label>
-                                <input type="number" id="editValue" name="value" placeholder="Value" required class="input input-bordered">
-                            </div>
-
-                            <div class="form-control">
-                                <label for="editDescription" class="label">Description:</label>
-                                <input type="text" id="editDescription" name="description" placeholder="Description" required class="input input-bordered">
-                            </div>
-
-                            <input type="hidden" name="id" value="{{ id }}">
-                        </div>
-                        <div class="modal-action">
-                            <button type="submit" class="btn btn-primary">Submit</button>
-                            <button type="button" onclick="closeEditModal()" class="btn">Close</button>
-                        </div>
-                    </form>
+                <div class="modal-action">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="button" onclick="closeAddModal()" class="btn">Close</button>
                 </div>
-            </dialog>
-        </main>
-        <footer class="footer sm:footer-horizontal footer-center bg-base-300 text-base-content p-4">
-            <aside>
-                <p>Version 0.1</p>
-            </aside>
-        </footer>
+            </form>
+        </div>
+    </dialog>
+    <div id="itemsTable" class="overflow-x-auto mt-4" hx-swap-oob="true">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Value</th>
+                    <th>Description</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data_source %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>{{ row[3] }}</td>
+                    <td>
+                        <div class="flex gap-3">
+                            <button class="btn btn-primary" onclick="openEditModal('{{ row[0] }}', '{{ row[1] }}', '{{ row[2] }}', '{{ row[3] }}')">
+                                Edit
+                            </button>
+                            <button class="btn btn-error" onclick="openDeleteModal('{{ row[0] }}')">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
-    <script>
-        function openAddModal() {
-            document.getElementById('addModal').showModal();
-        }
-        function closeAddModal() {
-            document.getElementById('addModal').close();
-        }
-        function resetAddForm(form) {
-            closeAddModal();
-            form.reset();
-        }
-        function openDeleteModal(name) {
-            document.getElementById('deleteName').value = name;
-            document.getElementById('deleteItemName').textContent = name;
-            document.getElementById('deleteModal').showModal();
-        }
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').close();
-        }
-        function openErrorModal() {
-            document.getElementById('errorModal').showModal();
-        }
-        function closeErrorModal() {
-            document.getElementById('errorModal').close();
-        }
-        function openEditModal(name, category, value, description) {
-            document.getElementById('editName').value = name;
-            document.getElementById('editCategory').value = category;
-            document.getElementById('editValue').value = value;
-            document.getElementById('editDescription').value = description;
-            document.getElementById('editModal').showModal();
-        }
-        function closeEditModal() {
-            document.getElementById('editModal').close();
-        }
-    </script>
-</body>
-</html>
+</div>
+<dialog id="deleteModal" class="modal">
+    <div class="modal-box">
+        <h2 class="text-lg font-bold mb-2">Confirm Deletion</h2>
+        <p>Are you sure you want to delete item <strong id="deleteItemName"></strong>?</p>
+        <form
+            id="deleteForm"
+            hx-post="/delete_item"
+            hx-target="#itemsTable"
+            hx-swap="innerHTML"
+            hx-ext="json-enc"
+            hx-on::after-request="if (event.detail.successful) closeDeleteModal(); else openErrorModal()"
+        >
+            <input type="hidden" id="deleteName" name="name">
+            <div class="modal-action">
+                <button type="submit" class="btn btn-error">Yes, Delete</button>
+                <button type="button" onclick="closeDeleteModal()" class="btn">Cancel</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+<dialog id="errorModal" class="modal" style="z-index: 1000;">
+    <div class="modal-box">
+        <h2 class="text-lg font-bold">Error</h2>
+        <p>An error occurred. Please try again later.</p>
+        <div class="modal-action">
+            <button type="button" onclick="closeErrorModal()" class="btn">Close</button>
+        </div>
+    </div>
+</dialog>
+<dialog id="editModal" class="modal">
+    <div class="modal-box">
+        <h2 class="text-lg font-bold">Edit Item</h2>
+        <form
+            id="editForm"
+            hx-post="/edit_item"
+            hx-target="#itemsTable"
+            hx-swap="innerHTML"
+            hx-ext="json-enc"
+            hx-on::after-request="if (event.detail.successful) closeEditModal(); else openErrorModal()"
+        >
+            <div class="flex flex-col gap-4 mb-4">
+                <div class="form-control">
+                    <label for="editName" class="label">Name:</label>
+                    <input type="text" id="editName" name="name" placeholder="Name" class="input input-bordered" readonly="readonly">
+                </div>
+
+                <div class="form-control">
+                    <label for="editCategory" class="label">Category:</label>
+                    <select id="editCategory" name="category" required class="select select-bordered">
+                        <option value="" disabled selected>Select Category</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}">{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-control">
+                    <label for="editValue" class="label">Value:</label>
+                    <input type="number" id="editValue" name="value" placeholder="Value" required class="input input-bordered">
+                </div>
+
+                <div class="form-control">
+                    <label for="editDescription" class="label">Description:</label>
+                    <input type="text" id="editDescription" name="description" placeholder="Description" required class="input input-bordered">
+                </div>
+
+                <input type="hidden" name="id" value="{{ id }}">
+            </div>
+            <div class="modal-action">
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <button type="button" onclick="closeEditModal()" class="btn">Close</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openAddModal() {
+        document.getElementById('addModal').showModal();
+    }
+    function closeAddModal() {
+        document.getElementById('addModal').close();
+    }
+    function resetAddForm(form) {
+        closeAddModal();
+        form.reset();
+    }
+    function openDeleteModal(name) {
+        document.getElementById('deleteName').value = name;
+        document.getElementById('deleteItemName').textContent = name;
+        document.getElementById('deleteModal').showModal();
+    }
+    function closeDeleteModal() {
+        document.getElementById('deleteModal').close();
+    }
+    function openErrorModal() {
+        document.getElementById('errorModal').showModal();
+    }
+    function closeErrorModal() {
+        document.getElementById('errorModal').close();
+    }
+    function openEditModal(name, category, value, description) {
+        document.getElementById('editName').value = name;
+        document.getElementById('editCategory').value = category;
+        document.getElementById('editValue').value = value;
+        document.getElementById('editDescription').value = description;
+        document.getElementById('editModal').showModal();
+    }
+    function closeEditModal() {
+        document.getElementById('editModal').close();
+    }
+</script>
+{% endblock %}
