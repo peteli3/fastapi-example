@@ -8,7 +8,7 @@
         Counter: <span id="counter" class="font-semibold">{{ counter }}</span>
     </p>
     <button
-        hx-post="/increment"
+        hx-post="/basic/increment"
         hx-target="#counter"
         hx-swap="innerHTML"
         class="btn btn-primary"

@@ -1,26 +1,24 @@
 from fastapi import FastAPI, Request, HTTPException, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+
 import re
 import uuid
-import os
-import subprocess
 
 from pydantic import BaseModel
 
-from .db import DB
+from .internal.db import DB
+from .internal.common import templates, VERSION, GIT_COMMIT
+from .routers.table import router as table_router
+from .routers.basic import router as basic_router
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-templates = Jinja2Templates(directory="app/templates")
+app.include_router(table_router)
+app.include_router(basic_router)
 
 db = DB()
 sessions = {}
-
-# Get version information
-VERSION = os.environ.get('VERSION', 'unknown')
-GIT_COMMIT = os.environ.get('GIT_COMMIT', 'unknown')
 
 @app.get("/version")
 def get_version():
@@ -30,7 +28,7 @@ def get_version():
     }
 
 @app.get("/", response_class=HTMLResponse)
-def get_homepage(request: Request):
+def get_home_page(request: Request):
     session_token = request.cookies.get("session_token")
     username = sessions.get(session_token, None)
     logged_in_as = f"Logged in as: {username}" if username else ""
@@ -81,109 +79,3 @@ def logout(request: Request, response: Response):
     session_token = request.cookies.get("session_token")
     if session_token and session_token in sessions:
         response.delete_cookie(key="session_token")
-
-class Counter:
-    def __init__(self):
-        self.value = 0
-
-    def get_value(self):
-        return self.value
-
-    def set_value(self, new_value):
-        self.value = new_value
-
-counter = Counter()
-
-@app.post("/increment")
-def increment_counter():
-    counter.set_value(counter.get_value() + 1)
-    return counter.get_value()
-
-@app.get("/basic", response_class=HTMLResponse)
-def get_basic(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="basic.html",
-        context={
-            "request": request,
-            "counter": counter.get_value(),
-            "version": VERSION,
-            "git_commit": GIT_COMMIT,
-        },
-    )
-
-@app.get("/table", response_class=HTMLResponse)
-def read_item(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="table.html",
-        context={
-            "data_source": db.list_items(),
-            "categories": db.list_categories(),
-            "version": VERSION,
-            "git_commit": GIT_COMMIT,
-        },
-    )
-
-class AddItemRequest(BaseModel):
-    name: str
-    category: str
-    value: int
-    description: str
-
-@app.post("/add_item", response_class=HTMLResponse)
-def add_item(request: Request, item: AddItemRequest):
-    db.add_item(item.name,
-                item.category,
-                item.value,
-                item.description)
-    return templates.TemplateResponse(
-        name="table.html",
-        context={
-            "request": request,
-            "data_source": db.list_items(),
-            "categories": db.list_categories(),
-            "version": VERSION,
-            "git_commit": GIT_COMMIT,
-        }
-    )
-
-class EditItemRequest(BaseModel):
-    name: str
-    category: str
-    value: int
-    description: str
-
-@app.post("/edit_item", response_class=HTMLResponse)
-def edit_item(request: Request, edit_request: EditItemRequest):
-    db.edit_item(edit_request.name,
-                 edit_request.category,
-                 edit_request.value,
-                 edit_request.description)
-    return templates.TemplateResponse(
-        name="table.html",
-        context={
-            "request": request,
-            "data_source": db.list_items(),
-            "categories": db.list_categories(),
-            "version": VERSION,
-            "git_commit": GIT_COMMIT,
-        }
-    )
-
-class DeleteItemRequest(BaseModel):
-    name: str
-
-@app.post("/delete_item", response_class=HTMLResponse)
-def delete_item(request: Request, delete_request: DeleteItemRequest):
-    db.delete_item(delete_request.name)
-    return templates.TemplateResponse(
-        name="table.html",
-        context={
-            "request": request,
-            "data_source": db.list_items(),
-            "categories": db.list_categories(),
-            "version": VERSION,
-            "git_commit": GIT_COMMIT,
-        }
-    )

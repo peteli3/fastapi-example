@@ -11,7 +11,7 @@
         <div class="modal-box">
             <h2 class="text-lg font-bold mb-4">Add New Item</h2>
             <form
-                hx-post="/add_item"
+                hx-post="/table/add_item"
                 hx-target="#itemsTable"
                 hx-swap="innerHTML"
                 hx-ext="json-enc"
@@ -91,7 +91,7 @@
         <p>Are you sure you want to delete item <strong id="deleteItemName"></strong>?</p>
         <form
             id="deleteForm"
-            hx-post="/delete_item"
+            hx-post="/table/delete_item"
             hx-target="#itemsTable"
             hx-swap="innerHTML"
             hx-ext="json-enc"
@@ -119,7 +119,7 @@
         <h2 class="text-lg font-bold mb-4">Edit Item</h2>
         <form
             id="editForm"
-            hx-post="/edit_item"
+            hx-post="/table/edit_item"
             hx-target="#itemsTable"
             hx-swap="innerHTML"
             hx-ext="json-enc"
