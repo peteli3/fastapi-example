@@ -14,48 +14,21 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
 db = DB()
-
-counter = 0
 sessions = {}
-
-def get_counter():
-    return counter
-
-def set_counter(newval):
-    global counter
-    counter = newval
-    return counter
 
 @app.get("/", response_class=HTMLResponse)
 def get_homepage(request: Request):
-    return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={
-            "request": request,
-        },
-    )
-
-@app.get("/items/{id}", response_class=HTMLResponse)
-def read_item(request: Request, id: int):
     session_token = request.cookies.get("session_token")
     username = sessions.get(session_token, None)
     logged_in_as = f"Logged in as: {username}" if username else ""
     return templates.TemplateResponse(
         request=request,
-        name="item.html",
+        name="index.html",
         context={
-            "id": id,
-            "counter": get_counter(),
-            "data_source": db.list_items(),
-            "categories": db.list_categories(),
+            "request": request,
             "logged_in_as": logged_in_as,
         },
     )
-
-@app.post("/increment")
-def increment_counter():
-    return set_counter(get_counter() + 1)
 
 class LoginRequest(BaseModel):
     username: str
@@ -80,7 +53,7 @@ def login(request: Request, login_request: LoginRequest, response: Response):
         response.set_cookie(key="session_token",
                             value=session_token,
                             httponly=True,
-                            secure=True,
+                            secure=False,  # Set to True for production
                             samesite="lax",
                             max_age=3600)
 
@@ -94,12 +67,50 @@ def logout(request: Request, response: Response):
     if session_token and session_token in sessions:
         response.delete_cookie(key="session_token")
 
+class Counter:
+    def __init__(self):
+        self.value = 0
+
+    def get_value(self):
+        return self.value
+
+    def set_value(self, new_value):
+        self.value = new_value
+
+counter = Counter()
+
+@app.post("/increment")
+def increment_counter():
+    counter.set_value(counter.get_value() + 1)
+    return counter.get_value()
+
+@app.get("/basic", response_class=HTMLResponse)
+def get_basic(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="basic.html",
+        context={
+            "request": request,
+            "counter": counter.get_value(),
+        },
+    )
+
+@app.get("/table", response_class=HTMLResponse)
+def read_item(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="table.html",
+        context={
+            "data_source": db.list_items(),
+            "categories": db.list_categories(),
+        },
+    )
+
 class AddItemRequest(BaseModel):
     name: str
     category: str
     value: int
     description: str
-    id: str
 
 @app.post("/add_item", response_class=HTMLResponse)
 def add_item(request: Request, item: AddItemRequest):
@@ -108,12 +119,10 @@ def add_item(request: Request, item: AddItemRequest):
                 item.value,
                 item.description)
     return templates.TemplateResponse(
-        name="item.html",
+        name="table.html",
         context={
             "request": request,
             "data_source": db.list_items(),
-            "id": int(item.id),
-            "counter": get_counter(),
             "categories": db.list_categories(),
         }
     )
@@ -123,7 +132,6 @@ class EditItemRequest(BaseModel):
     category: str
     value: int
     description: str
-    id: str
 
 @app.post("/edit_item", response_class=HTMLResponse)
 def edit_item(request: Request, edit_request: EditItemRequest):
@@ -132,12 +140,10 @@ def edit_item(request: Request, edit_request: EditItemRequest):
                  edit_request.value,
                  edit_request.description)
     return templates.TemplateResponse(
-        name="item.html",
+        name="table.html",
         context={
             "request": request,
             "data_source": db.list_items(),
-            "id": int(edit_request.id),
-            "counter": get_counter(),
             "categories": db.list_categories(),
         }
     )
@@ -149,12 +155,10 @@ class DeleteItemRequest(BaseModel):
 def delete_item(request: Request, delete_request: DeleteItemRequest):
     db.delete_item(delete_request.name)
     return templates.TemplateResponse(
-        name="item.html",
+        name="table.html",
         context={
             "request": request,
             "data_source": db.list_items(),
-            "id": int(request.query_params.get("id", "0")),
-            "counter": get_counter(),
             "categories": db.list_categories(),
         }
     )

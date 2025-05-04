@@ -1,28 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Item {{ id }}{% endblock %}
+{% block title %}Table{% endblock %}
 
 {% block content %}
-<div class="p-4">
-    <h1 class="mt-5 text-2xl font-bold">
-        Item ID: {{ id }}
-    </h1>
-    <a class="btn btn-link" href="{{ url_for('read_item', id=id+2) }}">Go to item {{ id+2 }}</a>
-    <p class="text-lg mb-2">
-        Counter: <span id="counter" class="font-semibold">{{ counter }}</span>
-    </p>
-    <button
-        hx-post="/increment"
-        hx-target="#counter"
-        hx-swap="innerHTML"
-        class="btn btn-primary"
-    >
-        Increment
-    </button>
-</div>
-<hr class="border-white mx-2.5">
 <div class="m-4">
-    <button class="btn btn-primary" onclick="openAddModal()">
+    <button class="btn btn-primary my-4" onclick="openAddModal()">
         Add Item
     </button>
     <dialog id="addModal" class="modal">
@@ -35,29 +17,32 @@
                 hx-ext="json-enc"
                 hx-on::after-request="if (event.detail.successful) resetAddForm(this); else openErrorModal()"
             >
-                <div class="flex flex-col gap-4 mb-4">
-                    <div class="form-control">
-                        <label for="name" class="label">Name:</label>
-                        <input type="text" id="name" name="name" placeholder="Name" required class="input input-bordered">
+                <div class="grid grid-cols-[1fr_2fr] gap-4 mb-4">
+                    <div class="flex flex-col space-y-4">
+                        <label for="name" class="label label-text h-10">Name:</label>
+                        <label for="category" class="label label-text h-10">Category:</label>
+                        <label for="value" class="label label-text h-10">Value:</label>
+                        <label for="description" class="label label-text h-10">Description:</label>
                     </div>
-                    <div class="form-control">
-                        <label for="category" class="label">Category:</label>
-                        <select id="category" name="category" required class="select select-bordered">
-                            <option value="" disabled selected>Select Category</option>
-                            {% for category in categories %}
-                            <option value="{{ category }}">{{ category }}</option>
-                            {% endfor %}
-                        </select>
+                    <div class="space-y-4">
+                        <div class="form-control">
+                            <input type="text" id="name" name="name" placeholder="Name" required class="input input-bordered">
+                        </div>
+                        <div class="form-control">
+                            <select id="category" name="category" required class="select select-bordered">
+                                <option value="" disabled selected>Select Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category }}">{{ category }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-control">
+                            <input type="number" id="value" name="value" placeholder="Value" required class="input input-bordered">
+                        </div>
+                        <div class="form-control">
+                            <input type="text" id="description" name="description" placeholder="Description" required class="input input-bordered">
+                        </div>
                     </div>
-                    <div class="form-control">
-                        <label for="value" class="label">Value:</label>
-                        <input type="number" id="value" name="value" placeholder="Value" required class="input input-bordered">
-                    </div>
-                    <div class="form-control">
-                        <label for="description" class="label">Description:</label>
-                        <input type="text" id="description" name="description" placeholder="Description" required class="input input-bordered">
-                    </div>
-                    <input type="hidden" name="id" value="{{ id }}">
                 </div>
                 <div class="modal-action">
                     <button type="submit" class="btn btn-primary">Submit</button>
@@ -140,33 +125,32 @@
             hx-ext="json-enc"
             hx-on::after-request="if (event.detail.successful) closeEditModal(); else openErrorModal()"
         >
-            <div class="flex flex-col gap-4 mb-4">
-                <div class="form-control">
-                    <label for="editName" class="label">Name:</label>
-                    <input type="text" id="editName" name="name" placeholder="Name" class="input input-bordered" readonly="readonly">
+            <div class="grid grid-cols-[1fr_2fr] gap-4 mb-4">
+                <div class="flex flex-col space-y-4">
+                    <label for="editName" class="label label-text h-10">Name:</label>
+                    <label for="editCategory" class="label label-text h-10">Category:</label>
+                    <label for="editValue" class="label label-text h-10">Value:</label>
+                    <label for="editDescription" class="label label-text h-10">Description:</label>
                 </div>
-
-                <div class="form-control">
-                    <label for="editCategory" class="label">Category:</label>
-                    <select id="editCategory" name="category" required class="select select-bordered">
-                        <option value="" disabled selected>Select Category</option>
-                        {% for category in categories %}
-                        <option value="{{ category }}">{{ category }}</option>
-                        {% endfor %}
-                    </select>
+                <div class="space-y-4">
+                    <div class="form-control">
+                        <input type="text" id="editName" name="name" placeholder="Name" class="input input-bordered" readonly="readonly">
+                    </div>
+                    <div class="form-control">
+                        <select id="editCategory" name="category" required class="select select-bordered">
+                            <option value="" disabled selected>Select Category</option>
+                            {% for category in categories %}
+                            <option value="{{ category }}">{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-control">
+                        <input type="number" id="editValue" name="value" placeholder="Value" required class="input input-bordered">
+                    </div>
+                    <div class="form-control">
+                        <input type="text" id="editDescription" name="description" placeholder="Description" required class="input input-bordered">
+                    </div>
                 </div>
-
-                <div class="form-control">
-                    <label for="editValue" class="label">Value:</label>
-                    <input type="number" id="editValue" name="value" placeholder="Value" required class="input input-bordered">
-                </div>
-
-                <div class="form-control">
-                    <label for="editDescription" class="label">Description:</label>
-                    <input type="text" id="editDescription" name="description" placeholder="Description" required class="input input-bordered">
-                </div>
-
-                <input type="hidden" name="id" value="{{ id }}">
             </div>
             <div class="modal-action">
                 <button type="submit" class="btn btn-primary">Submit</button>
