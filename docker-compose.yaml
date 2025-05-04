@@ -2,6 +2,9 @@ services:
   app:
     build:
       context: .
+      dockerfile: Dockerfile
+      args:
+        GIT_COMMIT: "${GIT_COMMIT:-unknown}"
     platform: linux/amd64
     restart: unless-stopped
 

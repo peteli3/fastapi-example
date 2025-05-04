@@ -28,4 +28,11 @@ COPY --from=tailwind /home/app/static/output.css /home/app/static/output.css
 COPY ./requirements.txt /home
 RUN pip install --no-cache-dir --upgrade -r /home/requirements.txt
 
-CMD ["fastapi", "run", "app/main.py", "--proxy-headers", "--port", "80"]
+# Set app version and git commit
+ARG GIT_COMMIT
+ENV GIT_COMMIT=${GIT_COMMIT:-unknown}
+ENV VERSION=0.1
+
+CMD ["fastapi", "run", "app/main.py", \
+    "--proxy-headers", \
+    "--port", "80"]

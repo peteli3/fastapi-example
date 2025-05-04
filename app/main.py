@@ -4,6 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import re
 import uuid
+import os
+import subprocess
 
 from pydantic import BaseModel
 
@@ -16,6 +18,17 @@ templates = Jinja2Templates(directory="app/templates")
 db = DB()
 sessions = {}
 
+# Get version information
+VERSION = os.environ.get('VERSION', 'unknown')
+GIT_COMMIT = os.environ.get('GIT_COMMIT', 'unknown')
+
+@app.get("/version")
+def get_version():
+    return {
+        "version": VERSION,
+        "git_commit": GIT_COMMIT,
+    }
+
 @app.get("/", response_class=HTMLResponse)
 def get_homepage(request: Request):
     session_token = request.cookies.get("session_token")
@@ -27,7 +40,9 @@ def get_homepage(request: Request):
         context={
             "request": request,
             "logged_in_as": logged_in_as,
-        },
+            "version": VERSION,
+            "git_commit": GIT_COMMIT,
+        }
     )
 
 class LoginRequest(BaseModel):
@@ -92,6 +107,8 @@ def get_basic(request: Request):
         context={
             "request": request,
             "counter": counter.get_value(),
+            "version": VERSION,
+            "git_commit": GIT_COMMIT,
         },
     )
 
@@ -103,6 +120,8 @@ def read_item(request: Request):
         context={
             "data_source": db.list_items(),
             "categories": db.list_categories(),
+            "version": VERSION,
+            "git_commit": GIT_COMMIT,
         },
     )
 
@@ -124,6 +143,8 @@ def add_item(request: Request, item: AddItemRequest):
             "request": request,
             "data_source": db.list_items(),
             "categories": db.list_categories(),
+            "version": VERSION,
+            "git_commit": GIT_COMMIT,
         }
     )
 
@@ -145,6 +166,8 @@ def edit_item(request: Request, edit_request: EditItemRequest):
             "request": request,
             "data_source": db.list_items(),
             "categories": db.list_categories(),
+            "version": VERSION,
+            "git_commit": GIT_COMMIT,
         }
     )
 
@@ -160,5 +183,7 @@ def delete_item(request: Request, delete_request: DeleteItemRequest):
             "request": request,
             "data_source": db.list_items(),
             "categories": db.list_categories(),
+            "version": VERSION,
+            "git_commit": GIT_COMMIT,
         }
     )
