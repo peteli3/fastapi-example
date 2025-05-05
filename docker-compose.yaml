@@ -19,9 +19,7 @@ services:
     restart: unless-stopped
 
   postgres:
-    build:
-      context: .
-      dockerfile: postgres.Dockerfile
+    image: postgres:17.4
     platform: linux/amd64
     environment:
       POSTGRES_USER: appuser
@@ -34,6 +32,11 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    command: >-
+      bash -c "
+      apt-get update &&
+      apt-get install -y vim &&
+      docker-entrypoint.sh postgres"
     restart: unless-stopped
 
   backups:
