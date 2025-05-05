@@ -36,5 +36,20 @@ services:
       retries: 5
     restart: unless-stopped
 
+  backups:
+    image: postgres:17.4-alpine
+    platform: linux/amd64
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: appdb
+      POSTGRES_USER: appuser
+      POSTGRES_PASSWORD: password
+    volumes:
+      - ./cronjobs/backup.sh:/etc/periodic/daily/backup.sh
+      - backup-data:/backups
+    command: crond -f
+    restart: unless-stopped
+
 volumes:
   postgres-data:
+  backup-data:
