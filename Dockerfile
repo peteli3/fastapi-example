@@ -18,7 +18,7 @@ RUN curl -sLO https://github.com/saadeghi/daisyui/releases/download/${DAISYUI_VE
 # Build css
 RUN ./tailwindcss -i app/static/input.css -o app/static/output.css --minify
 
-FROM python:3.13-alpine3.21 AS runtime
+FROM python:3.13-alpine AS runtime
 
 WORKDIR /home
 COPY ./app /home/app

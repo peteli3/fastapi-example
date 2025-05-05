@@ -9,7 +9,7 @@ services:
     restart: unless-stopped
 
   nginx:
-    image: nginx:latest
+    image: nginx:1.28.0-alpine
     platform: linux/amd64
     ports:
       - "80:80"
@@ -19,12 +19,12 @@ services:
     restart: unless-stopped
 
   postgres:
-    image: postgres:17.4
+    image: postgres:17.4-alpine
     platform: linux/amd64
     environment:
+      POSTGRES_DB: appdb
       POSTGRES_USER: appuser
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: appdb
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -32,10 +32,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    # Install vim as default editor
     command: >-
       bash -c "
-      apt-get update &&
-      apt-get install -y vim &&
+      apk add --no-cache vim &&
       docker-entrypoint.sh postgres"
     restart: unless-stopped
 
