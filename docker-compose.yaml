@@ -33,10 +33,9 @@ services:
       timeout: 5s
       retries: 5
     # Install vim as default editor
-    command: >-
-      bash -c "
-      apk add --no-cache vim &&
-      docker-entrypoint.sh postgres"
+    command: >
+      sh -c "apk add --no-cache vim &&
+             docker-entrypoint.sh postgres"
     restart: unless-stopped
 
   backups:
@@ -47,10 +46,17 @@ services:
       POSTGRES_DB: appdb
       POSTGRES_USER: appuser
       POSTGRES_PASSWORD: password
+      ACCESS_KEY: $ACCESS_KEY
+      SECRET_KEY: $SECRET_KEY
     volumes:
-      - ./cronjobs/backup.sh:/etc/periodic/daily/backup.sh
+      - ./cronjobs/backup.sh:/etc/periodic/daily/01-backup
+      - ./cronjobs/upload.sh:/etc/periodic/daily/02-upload
       - backup-data:/backups
-    command: crond -f
+    command: >
+      sh -c "apk add --no-cache curl openssl file coreutils &&
+             chmod u+x /etc/periodic/daily/01-backup &&
+             chmod u+x /etc/periodic/daily/02-upload &&
+             crond -f"
     restart: unless-stopped
 
 volumes:
