@@ -1,4 +1,5 @@
 from psycopg2 import pool
+import os
 import psycopg2.errors
 import time
 
@@ -7,11 +8,11 @@ from .migrations import MIGRATIONS
 connection_pool = pool.SimpleConnectionPool(
     minconn=1,
     maxconn=10,
-    dbname="appdb",
-    user="appuser",
-    password="password",
-    host="postgres",
-    port="5432",
+    host=os.getenv("POSTGRES_HOST"),
+    dbname=os.getenv("POSTGRES_DB"),
+    user=os.getenv("POSTGRES_USER"),
+    password=os.getenv("POSTGRES_PASSWORD"),
+    port=os.getenv("POSTGRES_PORT"),
 )
 
 class DB:

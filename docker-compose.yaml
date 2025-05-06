@@ -4,6 +4,12 @@ services:
       context: .
       args:
         GIT_COMMIT: "${GIT_COMMIT:-unknown}"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
     platform: linux/amd64
     restart: unless-stopped
     depends_on:
@@ -24,13 +30,13 @@ services:
     image: postgres:17.4-alpine
     platform: linux/amd64
     environment:
-      POSTGRES_DB: appdb
-      POSTGRES_USER: appuser
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "psql -U appuser -d appdb -c 'SELECT 1'"]
+      test: ["CMD-SHELL", "psql -U $POSTGRES_USER -d $POSTGRES_DB -c 'SELECT 1'"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -45,9 +51,9 @@ services:
     platform: linux/amd64
     environment:
       POSTGRES_HOST: postgres
-      POSTGRES_DB: appdb
-      POSTGRES_USER: appuser
-      POSTGRES_PASSWORD: password
+      POSTGRES_DB: $POSTGRES_DB
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
       ACCESS_KEY: $ACCESS_KEY
       SECRET_KEY: $SECRET_KEY
     volumes:
