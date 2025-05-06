@@ -2,11 +2,13 @@ services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile
       args:
         GIT_COMMIT: "${GIT_COMMIT:-unknown}"
     platform: linux/amd64
     restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   nginx:
     image: nginx:1.28.0-alpine
@@ -58,6 +60,8 @@ services:
              chmod u+x /etc/periodic/daily/02-upload &&
              crond -f"
     restart: unless-stopped
+    depends_on:
+      - postgres
 
 volumes:
   postgres-data:

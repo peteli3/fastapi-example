@@ -12,13 +12,13 @@ from .internal.common import templates, VERSION, GIT_COMMIT
 from .routers.table import router as table_router
 from .routers.basic import router as basic_router
 
+db = DB()
+db.migrate()
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(table_router)
 app.include_router(basic_router)
-
-db = DB()
-sessions = {}
 
 @app.get("/version")
 def get_version():
@@ -26,6 +26,8 @@ def get_version():
         "version": VERSION,
         "git_commit": GIT_COMMIT,
     }
+
+sessions = {}
 
 @app.get("/", response_class=HTMLResponse)
 def get_home_page(request: Request):
