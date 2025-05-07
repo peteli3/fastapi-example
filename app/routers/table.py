@@ -14,8 +14,8 @@ async def get_table_page(request: Request):
         request=request,
         name="table.html",
         context={
-            "data_source": db.list_items(),
-            "categories": db.list_categories(),
+            "data_source": db.items.list_items(),
+            "categories": db.items.list_categories(),
             "version": VERSION,
             "git_commit": GIT_COMMIT,
         },
@@ -29,13 +29,13 @@ class AddItemRequest(BaseModel):
 
 @router.post("/add_item", response_class=HTMLResponse)
 async def add_item(request: Request, item: AddItemRequest):
-    db.add_item(item.name, item.category, item.value, item.description)
+    db.items.add_item(item.name, item.category, item.value, item.description)
     return templates.TemplateResponse(
         name="table.html",
         context={
             "request": request,
-            "data_source": db.list_items(),
-            "categories": db.list_categories(),
+            "data_source": db.items.list_items(),
+            "categories": db.items.list_categories(),
             "version": VERSION,
             "git_commit": GIT_COMMIT,
         }
@@ -49,13 +49,13 @@ class EditItemRequest(BaseModel):
 
 @router.post("/edit_item", response_class=HTMLResponse)
 async def edit_item(request: Request, edit_request: EditItemRequest):
-    db.edit_item(edit_request.name, edit_request.category, edit_request.value, edit_request.description)
+    db.items.edit_item(edit_request.name, edit_request.category, edit_request.value, edit_request.description)
     return templates.TemplateResponse(
         name="table.html",
         context={
             "request": request,
-            "data_source": db.list_items(),
-            "categories": db.list_categories(),
+            "data_source": db.items.list_items(),
+            "categories": db.items.list_categories(),
             "version": VERSION,
             "git_commit": GIT_COMMIT,
         }
@@ -66,13 +66,13 @@ class DeleteItemRequest(BaseModel):
 
 @router.post("/delete_item", response_class=HTMLResponse)
 async def delete_item(request: Request, delete_request: DeleteItemRequest):
-    db.delete_item(delete_request.name)
+    db.items.delete_item(delete_request.name)
     return templates.TemplateResponse(
         name="table.html",
         context={
             "request": request,
-            "data_source": db.list_items(),
-            "categories": db.list_categories(),
+            "data_source": db.items.list_items(),
+            "categories": db.items.list_categories(),
             "version": VERSION,
             "git_commit": GIT_COMMIT,
         }

@@ -1,9 +1,10 @@
 from psycopg2 import pool
 import os
-import psycopg2.errors
 import time
 
-from .migrations import MIGRATIONS
+from .migrations import Migrations
+from .authentication import Authentication
+from .items import ItemRepository
 
 connection_pool = pool.SimpleConnectionPool(
     minconn=1,
@@ -30,6 +31,11 @@ class DB:
                     self.conn.commit()
                 connection_pool.putconn(self.conn)
 
+    def __init__(self):
+        self.migrations     = Migrations(self)
+        self.authentication = Authentication(self)
+        self.items          = ItemRepository(self)
+
     def is_ready(self):
         try:
             with self.Connection() as curs:
@@ -49,113 +55,3 @@ class DB:
                 time.sleep(delay)
                 delay = min(delay * 2, 30)  # Exponential backoff with max 30s delay
         return False
-
-    def migrate(self):
-        if not self.wait_until_ready():
-            raise RuntimeError("Could not connect to database after multiple retries")
-
-        with self.Connection() as curs:
-            curs.execute("""
-                CREATE TABLE IF NOT EXISTS migrations (
-                    name TEXT PRIMARY KEY NOT NULL,
-                    applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-                );
-            """)
-            total_migrations = len(MIGRATIONS)
-            applied_count = 0
-
-            for i, (name, sql) in enumerate(MIGRATIONS, 1):
-                curs.execute("SELECT 1 FROM migrations WHERE name = %s", (name,))
-                if curs.fetchone():
-                    print(f"[{i}/{total_migrations}] Migration {name} already applied")
-                    continue
-                print(f"[{i}/{total_migrations}] Applying migration {name}")
-                try:
-                    curs.execute(sql)
-                    status = curs.statusmessage
-                    if status:
-                        print(f"\tStatus: {status}")
-                    curs.execute("INSERT INTO migrations (name) VALUES (%s)", (name,))
-                    applied_count += 1
-
-                except Exception as e:
-                    print(f"\tError: {str(e)}")
-                    raise
-
-            print(f"\nMigration summary:")
-            print(f"- Total migrations available: {total_migrations}")
-            print(f"- Newly applied: {applied_count}")
-            print(f"- Already applied: {total_migrations - applied_count}")
-            print()
-
-    def authenticate_user(self, email, password):
-        with self.Connection() as curs:
-            curs.execute("""SELECT (password_hash = crypt(%(password)s, password_hash)) AS verified
-                            FROM users
-                            WHERE email = %(email)s;""",
-                            { 'email': email,
-                              'password': password.decode() })
-            row = curs.fetchone()
-            return bool(row[0])
-
-    def list_categories(self):
-        db_data = []
-        try:
-            with self.Connection() as curs:
-                curs.execute("""SELECT DISTINCT name
-                                FROM categories
-                                ORDER BY name ASC;""")
-                for row in curs:
-                    db_data.append(row[0])
-        except Exception as exc:
-            print(f"Error connecting to db: {exc}")
-        return db_data
-
-    def list_items(self):
-        db_data = []
-        try:
-            with self.Connection() as curs:
-                curs.execute("""SELECT name, category, value, description
-                                FROM items
-                                ORDER BY name ASC;""")
-                for row in curs:
-                    db_data.append([row[0], row[1], row[2], row[3]])
-        except Exception as exc:
-            print(f"Error connecting to db: {exc}")
-        return db_data
-
-    def add_item(self, name, category, value, description):
-        try:
-            with self.Connection() as curs:
-                curs.execute("""INSERT INTO items
-                                VALUES (%s, %s, %s, %s);""",
-                            (name, category, value, description))
-        except psycopg2.errors.UniqueViolation:
-            raise RuntimeError("A row with the same primary key already exists.")
-        except Exception as exc:
-            print(f"Error connecting to db: {exc}")
-
-    def edit_item(self, name, category, value, description):
-        try:
-            with self.Connection() as curs:
-                curs.execute("""UPDATE items
-                                SET category=%(category)s,
-                                    value=%(value)s,
-                                    description=%(description)s
-                                WHERE name=%(name)s;""",
-                            { 'name': name,
-                              'category': category,
-                              'value': value,
-                              'description': description })
-        except Exception as exc:
-            print(f"Error connecting to db: {exc}")
-
-    def delete_item(self, name):
-        try:
-            with self.Connection() as curs:
-                curs.execute("""DELETE FROM items
-                                WHERE name = %s;""",
-                            (name, ))
-        except Exception as exc:
-            print(f"Error connecting to db: {exc}")
-
