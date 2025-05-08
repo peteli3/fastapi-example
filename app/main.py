@@ -1,14 +1,14 @@
-from fastapi import FastAPI, Request, HTTPException, Response
+from fastapi import FastAPI, Request, Response, HTTPException, Depends
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 import re
-import uuid
 
 from pydantic import BaseModel
 
 from .internal.db import DB
 from .internal.common import templates, VERSION, GIT_COMMIT
+from .internal.authentication import require_auth
 from .routers.table import router as table_router
 from .routers.basic import router as basic_router
 from .middleware.session import SessionMiddleware
@@ -18,7 +18,7 @@ db.migrations.run()
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-app.include_router(table_router)
+app.include_router(table_router, dependencies=[Depends(require_auth)])
 app.include_router(basic_router)
 app.add_middleware(SessionMiddleware, db=db)
 

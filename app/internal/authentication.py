@@ -1,7 +1,11 @@
+from fastapi import Request
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .db import DB
+
+def require_auth(request: Request):
+    return request.state.user_email if request.state.authenticated else None
 
 class Authentication:
     def __init__(self, db: 'DB'):
