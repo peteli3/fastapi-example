@@ -27,7 +27,12 @@
                     </div>
                     <div class="space-y-4">
                         <div class="form-control">
-                            <input type="text" id="name" name="name" placeholder="Name" required class="input input-bordered">
+                            <input type="text"
+                                   id="name"
+                                   name="name"
+                                   placeholder="Name"
+                                   required
+                                   class="input input-bordered">
                         </div>
                         <div class="form-control">
                             <select id="category" name="category" required class="select select-bordered">
@@ -38,10 +43,20 @@
                             </select>
                         </div>
                         <div class="form-control">
-                            <input type="number" id="value" name="value" placeholder="Value" required class="input input-bordered">
+                            <input type="number"
+                                   id="value"
+                                   name="value"
+                                   placeholder="Value"
+                                   required
+                                   class="input input-bordered">
                         </div>
                         <div class="form-control">
-                            <input type="text" id="description" name="description" placeholder="Description" required class="input input-bordered">
+                            <input type="text"
+                                   id="description"
+                                   name="description"
+                                   placeholder="Description"
+                                   required
+                                   class="input input-bordered">
                         </div>
                     </div>
                 </div>
@@ -72,10 +87,12 @@
                     <td>{{ row[3] }}</td>
                     <td>
                         <div class="flex gap-3">
-                            <button class="btn btn-primary" onclick="openEditModal('{{ row[0] }}', '{{ row[1] }}', '{{ row[2] }}', '{{ row[3] }}')">
+                            <button class="btn btn-primary"
+                                    onclick="openEditModal('{{ row[0] }}', '{{ row[1] }}', '{{ row[2] }}', '{{ row[3] }}')">
                                 Edit
                             </button>
-                            <button class="btn btn-error" onclick="openDeleteModal('{{ row[0] }}')">
+                            <button class="btn btn-error"
+                                    onclick="openDeleteModal('{{ row[0] }}')">
                                 Delete
                             </button>
                         </div>
@@ -148,7 +165,12 @@
                 </div>
                 <div class="space-y-4">
                     <div class="form-control">
-                        <input type="text" id="editName" name="name" placeholder="Name" class="input input-bordered" readonly="readonly">
+                        <input type="text"
+                               id="editName"
+                               name="name"
+                               placeholder="Name"
+                               class="input input-bordered"
+                               readonly="readonly">
                     </div>
                     <div class="form-control">
                         <select id="editCategory" name="category" required class="select select-bordered">
@@ -159,10 +181,20 @@
                         </select>
                     </div>
                     <div class="form-control">
-                        <input type="number" id="editValue" name="value" placeholder="Value" required class="input input-bordered">
+                        <input type="number"
+                               id="editValue"
+                               name="value"
+                               placeholder="Value"
+                               required
+                               class="input input-bordered">
                     </div>
                     <div class="form-control">
-                        <input type="text" id="editDescription" name="description" placeholder="Description" required class="input input-bordered">
+                        <input type="text"
+                               id="editDescription"
+                               name="description"
+                               placeholder="Description"
+                               required
+                               class="input input-bordered">
                     </div>
                 </div>
             </div>

@@ -52,17 +52,36 @@
                 <div class="flex flex-col gap-3 w-full mb-3">
                     <div class="flex items-center gap-3">
                         <label for="username" class="w-24">Username:</label>
-                        <input type="text" id="username" name="username" placeholder="Username" required class="input input-bordered w-full">
+                        <input type="text"
+                               id="username"
+                               name="username"
+                               placeholder="Username"
+                               required
+                               class="input input-bordered w-full">
                     </div>
                     <div class="flex items-center gap-3">
                         <label for="password" class="w-24">Password:</label>
-                        <input type="password" id="password" name="password" placeholder="Password" required class="input input-bordered w-full">
+                        <input type="password"
+                               id="password"
+                               name="password"
+                               placeholder="Password"
+                               required
+                               class="input input-bordered w-full">
                     </div>
                 </div>
                 <div class="flex flex-col items-center gap-3">
                     <div class="flex gap-3">
-                        <button type="submit" hx-post="/login" hx-target="#logged-in-as" hx-ext="json-enc" hx-on::after-request="handleLoginResponse(event)" class="btn btn-primary">Login</button>
-                        <button type="button" hx-post="/logout" hx-target="#logged-in-as" hx-ext="json-enc" class="btn btn-error">Logout</button>
+                        <button type="submit"
+                                hx-post="/login"
+                                hx-target="#logged-in-as"
+                                hx-ext="json-enc"
+                                hx-on::after-request="handleLoginResponse(event)"
+                                class="btn btn-primary">Login</button>
+                        <button type="button"
+                                hx-post="/logout"
+                                hx-target="#logged-in-as"
+                                hx-ext="json-enc"
+                                class="btn btn-error">Logout</button>
                     </div>
                 </div>
             </form>
