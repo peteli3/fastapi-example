@@ -5,6 +5,7 @@ import time
 from .migrations import Migrations
 from .authentication import Authentication
 from .items import ItemRepository
+from .sessions import SessionManager
 
 connection_pool = pool.SimpleConnectionPool(
     minconn=1,
@@ -34,6 +35,7 @@ class DB:
     def __init__(self):
         self.migrations     = Migrations(self)
         self.authentication = Authentication(self)
+        self.sessions       = SessionManager(self)
         self.items          = ItemRepository(self)
 
     def is_ready(self):

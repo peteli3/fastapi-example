@@ -30,6 +30,15 @@ MIGRATIONS = [
             password_hash TEXT NOT NULL
         );
     """),
+    ("006_create_sessions_table", """
+        CREATE TABLE IF NOT EXISTS sessions (
+            token UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+            user_id UUID REFERENCES users(id) NOT NULL,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP NOT NULL,
+            user_agent TEXT
+        );
+    """),
 ]
 
 class Migrations:

@@ -11,6 +11,7 @@ from .internal.db import DB
 from .internal.common import templates, VERSION, GIT_COMMIT
 from .routers.table import router as table_router
 from .routers.basic import router as basic_router
+from .middleware.session import SessionMiddleware
 
 db = DB()
 db.migrations.run()
@@ -19,6 +20,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.include_router(table_router)
 app.include_router(basic_router)
+app.add_middleware(SessionMiddleware, db=db)
 
 @app.get("/version")
 def get_version():
@@ -27,19 +29,16 @@ def get_version():
         "git_commit": GIT_COMMIT,
     }
 
-sessions = {}
-
 @app.get("/", response_class=HTMLResponse)
 def get_home_page(request: Request):
-    session_token = request.cookies.get("session_token")
-    username = sessions.get(session_token, None)
-    logged_in_as = f"Logged in as: {username}" if username else ""
+    user_email = request.state.user_email
+    logged_in_as = f"Logged in as: {user_email}" if user_email else ""
     return templates.TemplateResponse(
         request=request,
         name="index.html",
         context={
             "request": request,
-            "logged_in_as": logged_in_as,
+            "logged_in_as": logged_in_as or "Not logged in",
             "version": VERSION,
             "git_commit": GIT_COMMIT,
         }
@@ -63,14 +62,15 @@ def login(request: Request, login_request: LoginRequest, response: Response):
         if not res:
             raise HTTPException(status_code=401, detail="Email and password do not match")
 
-        session_token = str(uuid.uuid4())
-        sessions[session_token] = login_request.username
+        user_id = res[0]
+        user_agent = request.headers.get("user-agent", "")
+        session_token = db.sessions.create_session(user_id, user_agent)
         response.set_cookie(key="session_token",
                             value=session_token,
                             httponly=True,
-                            secure=False,  # Set to True for production
+                            secure=False,  # Set to True for https
                             samesite="lax",
-                            max_age=3600)
+                            max_age=30*60) # In seconds
 
         return f"Logged in as: {login_request.username}"
     except HTTPException as e:
@@ -79,5 +79,8 @@ def login(request: Request, login_request: LoginRequest, response: Response):
 @app.post("/logout", response_class=HTMLResponse)
 def logout(request: Request, response: Response):
     session_token = request.cookies.get("session_token")
-    if session_token and session_token in sessions:
+    if session_token:
+        db.sessions.delete_session(session_token)
         response.delete_cookie(key="session_token")
+        return "Logged out successfully"
+    return "Not logged in"
