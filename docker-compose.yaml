@@ -54,17 +54,15 @@ services:
       POSTGRES_DB: $POSTGRES_DB
       POSTGRES_USER: $POSTGRES_USER
       POSTGRES_PASSWORD: $POSTGRES_PASSWORD
-      ACCESS_KEY: $ACCESS_KEY
-      SECRET_KEY: $SECRET_KEY
+      LINODE_PAT: $LINODE_PAT
     volumes:
-      - ./cronjobs/backup.sh:/etc/periodic/daily/01-backup
-      - ./cronjobs/upload.sh:/etc/periodic/daily/02-upload
+      - ./cronjobs/backup.sh:/etc/periodic/scripts/backup.sh
+      - ./cronjobs/backup-crontab:/etc/crontabs/root
       - backup-data:/backups
     command: >
-      sh -c "apk add --no-cache curl openssl file coreutils &&
-             chmod u+x /etc/periodic/daily/01-backup &&
-             chmod u+x /etc/periodic/daily/02-upload &&
-             crond -f"
+      sh -c "apk add --no-cache jq curl openssl file coreutils &&
+             chmod u+x /etc/periodic/scripts/backup.sh &&
+             crond -f -l 0"
     restart: unless-stopped
     depends_on:
       - postgres
